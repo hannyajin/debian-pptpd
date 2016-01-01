@@ -28,7 +28,6 @@ Find and uncomment net.ipv4.ip_forward = 1
 
 # append rule for nat table POSTROUTING chain to output into eth0 through ppp0
 #iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
 #iptables --table nat --append POSTROUTING --out-interface ppp0 -j MASQUERADE
 #iptables -I INPUT -s 10.0.0.0/8 -i ppp0 -j ACCEPT
 #iptables --append FORWARD --in-interface eth0 -j ACCEPT
@@ -40,6 +39,7 @@ Find and uncomment net.ipv4.ip_forward = 1
 
 # fix Windows VPN and PPTP Connectivity Timeouts (mppe_compress[0]: osize too small! (have: 1404 need: 1408)
 #add custom script fix to increate MTU when ppp0 connection is established by adding script to /etc/ppp/ip-up.d/mppefixmtu
+#REMEMBER to set execution privileges on the script (chmod +x)
 
 #!/bin/sh
 CURRENT_MTU="`ifconfig $1 | grep -Po '(?<=MTU:)([0-9]+)'`"
