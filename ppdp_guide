@@ -1,0 +1,55 @@
+#apt-get install pptpd vim
+
+# configure ppp local ip and ip range for connections
+#vim /etc/pptpd.conf
+localip 10.0.0.1
+remoteip 10.0.0.100-200
+
+#user accounts
+#vim /etc/ppp/chap-secrets
+#client     server      secret      IP addresses
+username pptpd passwword *
+sam * sample *
+
+# setup your DNS (or use googles aka 8.8.8.8 and 8.8.4.4)
+#vim /etc/ppp/pptpd-options
+ms-dns 8.8.8.8
+ms-dns 8.8.4.4
+
+# restart the pptpd service
+#service pptpd restart
+
+# enable ipv4 forwarding
+#vim /etc/sysctl.conf
+Find and uncomment net.ipv4.ip_forward = 1
+
+# update changes
+#sysctl -p
+
+# append rule for nat table POSTROUTING chain to output into eth0 through ppp0
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+#iptables --table nat --append POSTROUTING --out-interface ppp0 -j MASQUERADE
+#iptables -I INPUT -s 10.0.0.0/8 -i ppp0 -j ACCEPT
+#iptables --append FORWARD --in-interface eth0 -j ACCEPT
+
+# save iptables configuration (maybe run on startup?)
+#iptables-save > firewall
+#to restore do iptables-restore < firewall
+
+
+# fix Windows VPN and PPTP Connectivity Timeouts (mppe_compress[0]: osize too small! (have: 1404 need: 1408)
+#add custom script fix to increate MTU when ppp0 connection is established by adding script to /etc/ppp/ip-up.d/mppefixmtu
+
+#!/bin/sh
+CURRENT_MTU="`ifconfig $1 | grep -Po '(?<=MTU:)([0-9]+)'`"
+FIXED_MTU="`expr $CURRENT_MTU + 4`"
+ifconfig $1 mtu $FIXED_MTU
+echo "Increased MTU for $1 to $FIXED_MTU (from $CURRENT_MTU) to fix MPPE Microsoft Point-to-Point bug #330973"
+
+#r estart pptpd
+#service pptpd restart
+
+
+sources: https://www.youtube.com/watch?v=0XxzcJd9Vp0
+http://danielsokolowski.blogspot.com/2013/04/mppecompress0-osize-too-small-have-1404.html?spref=tw
